@@ -29,6 +29,7 @@
 #endif
 
 #include <assert.h>
+#include <errno.h>
 #include <pthread.h>
 #include <string.h>
 
@@ -181,10 +182,17 @@ static struct drm_tegra_bo_bucket * bo_bucket(struct drm_tegra_bo *bo)
 	return drm_tegra_get_bucket(bo->drm, bo->size);
 }
 
-static int is_idle(struct drm_tegra_bo *bo)
+static bool is_idle(struct drm_tegra_bo *bo)
 {
-	/* TODO implement drm_tegra_bo_cpu_prep() */
-	return 1;
+	bool ret;
+
+	VG_BO_OBTAIN(bo);
+
+	ret = drm_tegra_bo_cpu_prep(bo, DRM_TEGRA_CPU_PREP_WRITE, 0) != -EBUSY;
+
+	VG_BO_RELEASE(bo);
+
+	return ret;
 }
 
 static struct drm_tegra_bo *find_in_bucket(struct drm_tegra_bo_bucket *bucket,
