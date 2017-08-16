@@ -55,28 +55,14 @@ static int drm_tegra_channel_setup(struct drm_tegra_channel *channel)
 
 int drm_tegra_channel_open(struct drm_tegra_channel **channelp,
 			   struct drm_tegra *drm,
-			   enum drm_tegra_class client)
+			   enum drm_tegra_client client)
 {
 	struct drm_tegra_open_channel args;
 	struct drm_tegra_channel *channel;
-	enum host1x_class class;
 	int err;
 
 	if (!channelp || !drm)
 		return -EINVAL;
-
-	switch (client) {
-	case DRM_TEGRA_GR2D:
-		class = HOST1X_CLASS_GR2D;
-		break;
-
-	case DRM_TEGRA_GR3D:
-		class = HOST1X_CLASS_GR3D;
-		break;
-
-	default:
-		return -EINVAL;
-	}
 
 	channel = calloc(1, sizeof(*channel));
 	if (!channel)
@@ -85,7 +71,7 @@ int drm_tegra_channel_open(struct drm_tegra_channel **channelp,
 	channel->drm = drm;
 
 	memset(&args, 0, sizeof(args));
-	args.client = class;
+	args.client = client;
 
 	err = drmCommandWriteRead(drm->fd, DRM_TEGRA_OPEN_CHANNEL, &args,
 				  sizeof(args));
@@ -95,7 +81,6 @@ int drm_tegra_channel_open(struct drm_tegra_channel **channelp,
 	}
 
 	channel->context = args.context;
-	channel->class = class;
 
 	err = drm_tegra_channel_setup(channel);
 	if (err < 0) {

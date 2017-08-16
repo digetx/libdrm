@@ -46,13 +46,6 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-enum host1x_class {
-	HOST1X_CLASS_HOST1X = 0x01,
-	HOST1X_CLASS_GR2D = 0x51,
-	HOST1X_CLASS_GR2D_SB = 0x52,
-	HOST1X_CLASS_GR3D = 0x60,
-};
-
 struct drm_tegra_bo_bucket {
 	uint32_t size;
 	drmMMListHead list;
@@ -103,7 +96,6 @@ struct drm_tegra_bo {
 
 struct drm_tegra_channel {
 	struct drm_tegra *drm;
-	enum host1x_class class;
 	uint64_t context;
 	uint32_t syncpt;
 };

@@ -30,11 +30,6 @@
 
 #include <tegra_drm.h>
 
-enum drm_tegra_class {
-	DRM_TEGRA_GR2D,
-	DRM_TEGRA_GR3D,
-};
-
 struct drm_tegra_bo;
 struct drm_tegra;
 
@@ -94,7 +89,7 @@ enum drm_tegra_syncpt_cond {
 
 int drm_tegra_channel_open(struct drm_tegra_channel **channelp,
 			   struct drm_tegra *drm,
-			   enum drm_tegra_class client);
+			   enum drm_tegra_client client);
 int drm_tegra_channel_close(struct drm_tegra_channel *channel);
 
 int drm_tegra_job_new(struct drm_tegra_job **jobp,
