@@ -25,6 +25,7 @@
 #ifndef __DRM_TEGRA_H__
 #define __DRM_TEGRA_H__ 1
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -74,15 +75,46 @@ int drm_tegra_bo_from_dmabuf(struct drm_tegra_bo **bop, struct drm_tegra *drm,
 
 int drm_tegra_bo_get_size(struct drm_tegra_bo *bo, uint32_t *size);
 int drm_tegra_bo_forbid_caching(struct drm_tegra_bo *bo);
+int drm_tegra_bo_cpu_prep(struct drm_tegra_bo *bo,
+			  uint32_t flags, uint32_t timeout);
 
-struct drm_tegra_channel;
-struct drm_tegra_job;
+struct drm_tegra_channel {
+	struct drm_tegra *drm;
+	uint32_t class_id;
+	uint64_t context;
+	uint32_t syncpt;
+};
+
+struct drm_tegra_fence {
+	struct drm_tegra *drm;
+	uint32_t syncpt;
+	uint32_t value;
+};
+
+struct drm_tegra_job {
+	struct drm_tegra_channel *channel;
+
+	uint32_t current_class;
+
+	unsigned int increments;
+	uint32_t syncpt;
+
+	struct drm_tegra_submit_bo *bos;
+	unsigned int num_bos;
+
+	struct drm_tegra_reloc *relocs;
+	unsigned int num_relocs;
+
+	struct drm_tegra_cmdbuf *cmdbufs;
+	unsigned int num_cmdbufs;
+
+	struct drm_tegra_waitchk *waitchks;
+	unsigned int num_waitchks;
+};
 
 struct drm_tegra_pushbuf {
 	uint32_t *ptr;
 };
-
-struct drm_tegra_fence;
 
 enum drm_tegra_syncpt_cond {
 	DRM_TEGRA_SYNCPT_COND_IMMEDIATE,
@@ -102,6 +134,7 @@ int drm_tegra_job_new(struct drm_tegra_job **jobp,
 int drm_tegra_job_free(struct drm_tegra_job *job);
 int drm_tegra_job_submit(struct drm_tegra_job *job,
 			 struct drm_tegra_fence **fencep);
+int drm_tegra_job_set_class(struct drm_tegra_job *job, uint32_t class_id);
 
 int drm_tegra_pushbuf_new(struct drm_tegra_pushbuf **pushbufp,
 			  struct drm_tegra_job *job);
@@ -111,9 +144,13 @@ int drm_tegra_pushbuf_prepare(struct drm_tegra_pushbuf *pushbuf,
 int drm_tegra_pushbuf_relocate(struct drm_tegra_pushbuf *pushbuf,
 			       struct drm_tegra_bo *target,
 			       unsigned long offset,
-			       unsigned long shift);
+			       unsigned long shift,
+			       bool write);
 int drm_tegra_pushbuf_sync(struct drm_tegra_pushbuf *pushbuf,
 			   enum drm_tegra_syncpt_cond cond);
+int drm_tegra_pushbuf_waitchk(struct drm_tegra_pushbuf *pushbuf,
+			      uint32_t syncpt, uint32_t thresh,
+			      bool relative);
 
 int drm_tegra_fence_wait_timeout(struct drm_tegra_fence *fence,
 				 unsigned long timeout);
@@ -123,5 +160,18 @@ static inline int drm_tegra_fence_wait(struct drm_tegra_fence *fence)
 {
 	return drm_tegra_fence_wait_timeout(fence, -1);
 }
+
+struct drm_tegra_syncpoint {
+	struct drm_tegra *drm;
+	uint32_t id;
+	uint32_t value;
+	uint64_t index;
+	uint64_t context;
+};
+
+int drm_tegra_get_excl_syncpt(struct drm_tegra_channel *channel,
+			      struct drm_tegra_syncpoint *syncpt,
+			      bool with_base);
+int drm_tegra_put_excl_syncpt(struct drm_tegra_syncpoint *syncpt);
 
 #endif /* __DRM_TEGRA_H__ */

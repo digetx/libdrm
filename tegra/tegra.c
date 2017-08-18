@@ -644,3 +644,20 @@ int drm_tegra_bo_forbid_caching(struct drm_tegra_bo *bo)
 
 	return 0;
 }
+
+int drm_tegra_bo_cpu_prep(struct drm_tegra_bo *bo,
+			  uint32_t flags, uint32_t timeout)
+{
+	struct drm_tegra_gem_cpu_prep args;
+
+	if (!bo)
+		return -EINVAL;
+
+	memset(&args, 0, sizeof(args));
+	args.flags = flags;
+	args.handle = bo->handle;
+	args.timeout = timeout;
+
+	return drmCommandWriteRead(bo->drm->fd, DRM_TEGRA_GEM_CPU_PREP, &args,
+				   sizeof(args));
+}

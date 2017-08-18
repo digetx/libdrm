@@ -112,19 +112,6 @@ struct drm_tegra_bo {
 
 };
 
-struct drm_tegra_channel {
-	struct drm_tegra *drm;
-	enum host1x_class class;
-	uint64_t context;
-	uint32_t syncpt;
-};
-
-struct drm_tegra_fence {
-	struct drm_tegra *drm;
-	uint32_t syncpt;
-	uint32_t value;
-};
-
 struct drm_tegra_pushbuf_private {
 	struct drm_tegra_pushbuf base;
 	struct drm_tegra_job *job;
@@ -142,28 +129,30 @@ drm_tegra_pushbuf(struct drm_tegra_pushbuf *pb)
 	return container_of(pb, struct drm_tegra_pushbuf_private, base);
 }
 
-int drm_tegra_pushbuf_queue(struct drm_tegra_pushbuf_private *pushbuf);
+int drm_tegra_pushbuf_queue(struct drm_tegra_pushbuf_private *pushbuf,
+			    bool split_bo);
 
-struct drm_tegra_job {
-	struct drm_tegra_channel *channel;
-
-	unsigned int increments;
-	uint32_t syncpt;
-
-	struct drm_tegra_reloc *relocs;
-	unsigned int num_relocs;
-
-	struct drm_tegra_cmdbuf *cmdbufs;
-	unsigned int num_cmdbufs;
-
+struct drm_tegra_job_private {
+	struct drm_tegra_job base;
 	struct drm_tegra_pushbuf_private *pushbuf;
 	drmMMListHead pushbufs;
 };
 
+static inline struct drm_tegra_job_private *
+drm_tegra_job(struct drm_tegra_job *job)
+{
+	return container_of(job, struct drm_tegra_job_private, base);
+}
+
+int drm_tegra_job_add_waitchk(struct drm_tegra_job *job,
+			      const struct drm_tegra_waitchk *waitchk);
 int drm_tegra_job_add_reloc(struct drm_tegra_job *job,
 			    const struct drm_tegra_reloc *reloc);
 int drm_tegra_job_add_cmdbuf(struct drm_tegra_job *job,
 			     const struct drm_tegra_cmdbuf *cmdbuf);
+int drm_tegra_job_add_bo(struct drm_tegra_job *job,
+			 const struct drm_tegra_bo *bo,
+			 bool cmdbuf, bool write);
 
 int drm_tegra_bo_free(struct drm_tegra_bo *bo);
 int drm_tegra_bo_map_locked(struct drm_tegra_bo *bo, void **ptr);

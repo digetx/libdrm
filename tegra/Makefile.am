@@ -18,6 +18,7 @@ libdrm_tegra_la_SOURCES = \
 	job.c \
 	private.h \
 	pushbuf.c \
+	syncpt.c \
 	tegra.c \
 	tegra_bo_cache.c
 

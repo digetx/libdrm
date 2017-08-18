@@ -131,8 +131,15 @@ static struct drm_tegra_bo_bucket * get_bucket(struct drm_tegra_bo_cache *cache,
 
 static int is_idle(struct drm_tegra_bo *bo)
 {
-	/* TODO implement drm_tegra_bo_cpu_prep() */
-	return 1;
+	int ret;
+
+	VG_BO_OBTAIN(bo);
+
+	ret = drm_tegra_bo_cpu_prep(bo, DRM_TEGRA_CPU_PREP_WRITE, 0) == 0;
+
+	VG_BO_RELEASE(bo);
+
+	return ret;
 }
 
 static struct drm_tegra_bo *find_in_bucket(struct drm_tegra_bo_bucket *bucket,

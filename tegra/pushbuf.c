@@ -44,29 +44,45 @@ drm_tegra_pushbuf_get_offset(struct drm_tegra_pushbuf *pushbuf)
 }
 
 drm_private
-int drm_tegra_pushbuf_queue(struct drm_tegra_pushbuf_private *pushbuf)
+int drm_tegra_pushbuf_queue(struct drm_tegra_pushbuf_private *pushbuf,
+			    bool split_bo)
 {
 	struct drm_tegra_cmdbuf cmdbuf;
+	unsigned long offset;
 	int err;
 
 	if (!pushbuf || !pushbuf->bo)
 		return 0;
 
+	offset = (unsigned long)pushbuf->start -
+			(unsigned long)pushbuf->bo->map;
+
 	/* unmap buffer object since it won't be accessed anymore */
-	drm_tegra_bo_unmap(pushbuf->bo);
+	if (!split_bo)
+		drm_tegra_bo_unmap(pushbuf->bo);
+
+	err = drm_tegra_job_add_bo(pushbuf->job, pushbuf->bo,
+				   true, false);
+	if (err < 0)
+		return err;
 
 	/* add buffer object as command buffers for this job */
 	memset(&cmdbuf, 0, sizeof(cmdbuf));
 	cmdbuf.words = pushbuf->base.ptr - pushbuf->start;
-	cmdbuf.handle = pushbuf->bo->handle;
-	cmdbuf.offset = 0;
+	cmdbuf.index = err;
+	cmdbuf.offset = offset;
+	cmdbuf.class_id = pushbuf->job->current_class;
 
 	/* maintain mmap refcount balance upon pushbuf free'ing */
-	pushbuf->bo = NULL;
+	if (!split_bo)
+		pushbuf->bo = NULL;
 
 	err = drm_tegra_job_add_cmdbuf(pushbuf->job, &cmdbuf);
 	if (err < 0)
 		return err;
+
+	if (split_bo)
+		pushbuf->start = pushbuf->base.ptr;
 
 	return 0;
 }
@@ -75,6 +91,7 @@ int drm_tegra_pushbuf_new(struct drm_tegra_pushbuf **pushbufp,
 			  struct drm_tegra_job *job)
 {
 	struct drm_tegra_pushbuf_private *pushbuf;
+	struct drm_tegra_job_private *job_priv;
 
 	if (!pushbufp || !job)
 		return -EINVAL;
@@ -88,9 +105,10 @@ int drm_tegra_pushbuf_new(struct drm_tegra_pushbuf **pushbufp,
 	pushbuf->job = job;
 
 	*pushbufp = &pushbuf->base;
+	job_priv = drm_tegra_job(job);
 
-	DRMLISTADDTAIL(&pushbuf->list, &job->pushbufs);
-	job->pushbuf = pushbuf;
+	DRMLISTADDTAIL(&pushbuf->list, &job_priv->pushbufs);
+	job_priv->pushbuf = pushbuf;
 
 	return 0;
 }
@@ -157,7 +175,7 @@ int drm_tegra_pushbuf_prepare(struct drm_tegra_pushbuf *pushbuf,
 	}
 
 	/* queue current command stream buffer for submission */
-	err = drm_tegra_pushbuf_queue(priv);
+	err = drm_tegra_pushbuf_queue(priv, false);
 	if (err < 0) {
 		drm_tegra_bo_unmap(bo);
 		drm_tegra_bo_unref(bo);
@@ -176,7 +194,8 @@ int drm_tegra_pushbuf_prepare(struct drm_tegra_pushbuf *pushbuf,
 int drm_tegra_pushbuf_relocate(struct drm_tegra_pushbuf *pushbuf,
 			       struct drm_tegra_bo *target,
 			       unsigned long offset,
-			       unsigned long shift)
+			       unsigned long shift,
+			       bool write)
 {
 	struct drm_tegra_pushbuf_private *priv;
 	struct drm_tegra_reloc reloc;
@@ -190,10 +209,14 @@ int drm_tegra_pushbuf_relocate(struct drm_tegra_pushbuf *pushbuf,
 	if (err < 0)
 		return err;
 
+	err = drm_tegra_job_add_bo(priv->job, target, false, write);
+	if (err < 0)
+		return err;
+
 	memset(&reloc, 0, sizeof(reloc));
-	reloc.cmdbuf.handle = priv->bo->handle;
+	reloc.cmdbuf.index =  priv->job->num_cmdbufs;
 	reloc.cmdbuf.offset = drm_tegra_pushbuf_get_offset(pushbuf);
-	reloc.target.handle = target->handle;
+	reloc.target.index = err;
 	reloc.target.offset = offset;
 	reloc.shift = shift;
 
@@ -226,6 +249,43 @@ int drm_tegra_pushbuf_sync(struct drm_tegra_pushbuf *pushbuf,
 	*pushbuf->ptr++ = HOST1X_OPCODE_NONINCR(0x0, 0x1);
 	*pushbuf->ptr++ = cond << 8 | priv->job->syncpt;
 	priv->job->increments++;
+
+	return 0;
+}
+
+int drm_tegra_pushbuf_waitchk(struct drm_tegra_pushbuf *pushbuf,
+			      uint32_t syncpt, uint32_t thresh,
+			      bool relative)
+{
+	struct drm_tegra_pushbuf_private *priv;
+	struct drm_tegra_waitchk waitchk;
+	int err;
+
+	if (!pushbuf)
+		return -EINVAL;
+
+	priv = drm_tegra_pushbuf(pushbuf);
+	err = drm_tegra_pushbuf_prepare(pushbuf, 1);
+	if (err < 0)
+		return err;
+
+	if (priv->start != pushbuf->ptr) {
+		err = drm_tegra_pushbuf_queue(priv, true);
+		if (err < 0)
+			return err;
+	}
+
+	memset(&waitchk, 0, sizeof(waitchk));
+	waitchk.cmdbuf_index = priv->job->num_cmdbufs;
+	waitchk.syncpt_id = syncpt;
+	waitchk.thresh = thresh;
+
+	if (relative)
+		waitchk.flags |= DRM_TEGRA_WAITCHK_RELATIVE;
+
+	err = drm_tegra_job_add_waitchk(priv->job, &waitchk);
+	if (err < 0)
+		return err;
 
 	return 0;
 }

@@ -95,7 +95,7 @@ int drm_tegra_channel_open(struct drm_tegra_channel **channelp,
 	}
 
 	channel->context = args.context;
-	channel->class = class;
+	channel->class_id = class;
 
 	err = drm_tegra_channel_setup(channel);
 	if (err < 0) {
