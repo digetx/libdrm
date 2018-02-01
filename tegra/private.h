@@ -220,8 +220,10 @@ static inline void VG_BO_RELEASE(struct drm_tegra_bo *bo)
 		 * avoid double freelike marking that would be reported
 		 * by valgrind.
 		 */
-		if (bo->mmap_ref > 1)
+		if (bo->mmap_ref > 1) {
 			VALGRIND_FREELIKE_BLOCK(bo->map, 0);
+			bo->mmap_ref = 1;
+		}
 		/*
 		 * Nothing should touch BO now, disable BO memory accesses
 		 * to catch them in valgrind, but leave cache related stuff
