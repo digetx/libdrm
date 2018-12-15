@@ -19,19 +19,19 @@
 # SOFTWARE.
 
 files_tegra = files(
-  'channel.c',
-  'fence.c',
-  'job.c',
   'private.h',
-  'pushbuf.c',
   'tegra_bo_cache.c',
   'tegra.c',
+  'uapi_v1/channel.c',
+  'uapi_v1/fence.c',
+  'uapi_v1/job.c',
+  'uapi_v1/pushbuf.c',
 )
 
 libdrm_tegra = shared_library(
   'drm_tegra',
   [files_tegra, config_file],
-  include_directories : [inc_root, inc_drm],
+  include_directories : [inc_root, inc_drm, include_directories('.')],
   link_with : libdrm,
   dependencies : [dep_pthread_stubs, dep_atomic_ops, dep_valgrind],
   c_args : libdrm_c_args,

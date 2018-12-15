@@ -31,7 +31,7 @@
 
 #include <xf86drm.h>
 
-#include "private.h"
+#include "uapi_v1.h"
 
 static int drm_tegra_channel_setup(struct drm_tegra_channel *channel)
 {

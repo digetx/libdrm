@@ -32,7 +32,7 @@
 
 #include <xf86drm.h>
 
-#include "private.h"
+#include "uapi_v1.h"
 
 drm_private
 int drm_tegra_job_add_reloc(struct drm_tegra_job *job,

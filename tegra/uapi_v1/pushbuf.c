@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "private.h"
+#include "uapi_v1.h"
 
 #define HOST1X_OPCODE_NONINCR(offset, count) \
 	((0x2 << 28) | (((offset) & 0xfff) << 16) | ((count) & 0xffff))

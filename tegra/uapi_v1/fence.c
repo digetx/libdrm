@@ -31,7 +31,7 @@
 
 #include <xf86drm.h>
 
-#include "private.h"
+#include "uapi_v1.h"
 
 drm_public
 int drm_tegra_fence_wait_timeout(struct drm_tegra_fence *fence,

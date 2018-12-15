@@ -1,5 +1,8 @@
+AUTOMAKE_OPTIONS=subdir-objects
+
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
+	-I$(top_srcdir)/tegra \
 	-I$(top_srcdir)/include/drm
 
 AM_CFLAGS = \
@@ -14,13 +17,13 @@ libdrm_tegra_la_LDFLAGS = -version-number 0:0:0 -no-undefined
 libdrm_tegra_la_LIBADD = ../libdrm.la @PTHREADSTUBS_LIBS@
 
 libdrm_tegra_la_SOURCES = \
-	channel.c \
-	fence.c \
-	job.c \
 	private.h \
-	pushbuf.c \
 	tegra.c \
-	tegra_bo_cache.c
+	tegra_bo_cache.c \
+	uapi_v1/channel.c \
+	uapi_v1/fence.c \
+	uapi_v1/job.c \
+	uapi_v1/pushbuf.c
 
 libdrm_tegraincludedir = ${includedir}/libdrm
 libdrm_tegrainclude_HEADERS = tegra.h
