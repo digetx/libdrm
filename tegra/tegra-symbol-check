@@ -31,8 +31,14 @@ drm_tegra_new
 drm_tegra_channel_open
 drm_tegra_channel_close
 drm_tegra_job_new
+drm_tegra_job_new_v2
+drm_tegra_job_push_reloc_v2
+drm_tegra_job_reset_v2
+drm_tegra_job_resize_v2
 drm_tegra_job_free
+drm_tegra_job_free_v2
 drm_tegra_job_submit
+drm_tegra_job_submit_v2
 drm_tegra_pushbuf_new
 drm_tegra_pushbuf_free
 drm_tegra_pushbuf_prepare

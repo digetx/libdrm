@@ -23,7 +23,8 @@ libdrm_tegra_la_SOURCES = \
 	uapi_v1/channel.c \
 	uapi_v1/fence.c \
 	uapi_v1/job.c \
-	uapi_v1/pushbuf.c
+	uapi_v1/pushbuf.c \
+	uapi_v2/job.c
 
 libdrm_tegraincludedir = ${includedir}/libdrm
 libdrm_tegrainclude_HEADERS = tegra.h

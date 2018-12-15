@@ -25,6 +25,7 @@
 #ifndef __DRM_TEGRA_H__
 #define __DRM_TEGRA_H__ 1
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -123,5 +124,33 @@ static inline int drm_tegra_fence_wait(struct drm_tegra_fence *fence)
 {
 	return drm_tegra_fence_wait_timeout(fence, -1);
 }
+
+struct drm_tegra_job_v2 {
+	struct drm_tegra *drm;
+	struct drm_tegra_bo_table_entry *bo_table;
+	unsigned int num_bos;
+	unsigned int num_bos_max;
+	unsigned int num_words;
+	uint32_t *start;
+	uint32_t *ptr;
+};
+
+int drm_tegra_job_new_v2(struct drm_tegra_job_v2 **jobp,
+			 struct drm_tegra *drm,
+			 unsigned int num_bos_expected,
+			 unsigned int num_words_expected);
+int drm_tegra_job_resize_v2(struct drm_tegra_job_v2 *job,
+			    unsigned int num_words,
+			    unsigned int num_bos,
+			    bool reallocate);
+int drm_tegra_job_reset_v2(struct drm_tegra_job_v2 *job);
+int drm_tegra_job_free_v2(struct drm_tegra_job_v2 *job);
+int drm_tegra_job_push_reloc_v2(struct drm_tegra_job_v2 *job,
+				struct drm_tegra_bo *target,
+				unsigned long offset,
+				uint32_t flags);
+int drm_tegra_job_submit_v2(struct drm_tegra_job_v2 *job,
+			    uint32_t syncobj_handle,
+			    uint64_t pipes_mask);
 
 #endif /* __DRM_TEGRA_H__ */
