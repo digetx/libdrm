@@ -36,3 +36,4 @@ libdrm_tegra.so.0 libdrm-tegra0 #MINVER#
  drm_tegra_bo_to_dmabuf@Base 0
  drm_tegra_bo_get_size@Base 0
  drm_tegra_bo_forbid_caching@Base 0
+ drm_tegra_bo_cpu_prep@Base 0
