@@ -1,4 +1,4 @@
-Source: libdrm
+Source: libdrm-grate
 Priority: optional
 Maintainer: Dmitry Osipenko <digetx@gmail.com>
 Build-Depends:

@@ -1,4 +1,4 @@
-libdrm (2.4.999-grate0) xenial; urgency=medium
+libdrm-grate (2.4.999-grate0) xenial; urgency=medium
 
   * Initial release.
 
